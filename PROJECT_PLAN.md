@@ -9,8 +9,8 @@ Building a warehouse management system (STASH) with user roles, product manageme
 
 ### Both Together (2-3 hours)
 - [ ] Set up GitHub repository and branches
-- [ ] Create database structure (5 tables max)
-- [ ] Basic PHP config file
+- [ ir ] Create database structure (5 tables max)
+- [ ir ] Basic PHP config file
 - [ ] Simple CSS framework
 - [ ] Test connection and git workflow
 
@@ -28,8 +28,8 @@ Building a warehouse management system (STASH) with user roles, product manageme
 ### Person A: Users & Dashboard
 **Day 2:**
 - [ ] Login/logout system (simple)   Daniels
-- [ ] User management page (assign roles to users)
-- [ ] Role management system (admin can create/edit roles)
+- [ ] User management page (assign roles to users)    #AGATE
+- [ ] Role management system (admin can create/edit roles)  #AGATE
 - [ ] Basic dashboard with stats   Daniels   
 
 **Day 3:**
