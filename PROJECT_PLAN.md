@@ -27,10 +27,10 @@ Building a warehouse management system (STASH) with user roles, product manageme
 
 ### Person A: Users & Dashboard
 **Day 2:**
-- [ ] Login/logout system (simple)
+- [ ] Login/logout system (simple)   Daniels
 - [ ] User management page (assign roles to users)
 - [ ] Role management system (admin can create/edit roles)
-- [ ] Basic dashboard with stats
+- [ ] Basic dashboard with stats   Daniels   
 
 **Day 3:**
 - [ ] Shelf management interface
@@ -41,12 +41,12 @@ Building a warehouse management system (STASH) with user roles, product manageme
 
 ### Person B: Products & Orders
 **Day 2:**
-- [ ] Products CRUD (add/edit/delete/view)
+- [ ] Products CRUD (add/edit/delete/view)   Daniels
 - [ ] Product categories
-- [ ] Products table (matches your interface)
+- [ ] Products table (matches your interface) Daniels
 
 **Day 3:**
-- [ ] Order management system
+- [ ] Order management system  (varu jebkuru izvelies sev)
 - [ ] Basic reports generation
 - [ ] Order-product linking
 
@@ -62,14 +62,14 @@ Building a warehouse management system (STASH) with user roles, product manageme
 - [ ] Test all workflows
 
 ### Afternoon (Split)
-- [ ] **Person A:** Polish UI, fix navigation
+- [ ] **Person A:** Polish UI, fix navigation  Daniels
 - [ ] **Person B:** Complete reports, final testing
 
 ---
 
 ## Day 5: Final Testing (If Needed)
 - [ ] Test all 3 user roles
-- [ ] Fix any bugs
+- [ ] Fix any bugs      Daniels
 - [ ] Clean up code
 - [ ] Submit project
 
