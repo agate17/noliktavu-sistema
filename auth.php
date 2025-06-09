@@ -20,6 +20,14 @@ function hasRole($roles) {
 }
 
 /**
+ * Check if current user is an administrator
+ * @return bool
+ */
+function isAdmin() {
+    return hasRole(['administrator']);
+}
+
+/**
  * Get current user's ID
  * @return int|null
  */

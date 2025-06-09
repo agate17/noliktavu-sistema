@@ -2,6 +2,9 @@
 require_once 'config.php';
 require_once 'auth.php';
 
+// Set JSON content type
+header('Content-Type: application/json');
+
 // Check if user is logged in
 if (!isLoggedIn()) {
     echo json_encode(['success' => false, 'error' => 'Nav autorizācijas']);
@@ -45,7 +48,7 @@ try {
         // Get shelf changes
         $query = "
             SELECT p.*, c.name as category_name, co.name as company_name,
-                   sc.old_location, sc.new_location, sc.changed_at, sc.notes
+                   sc.old_location, sc.new_location, sc.created_at, sc.notes
             FROM shelf_changes sc
             JOIN products p ON sc.product_id = p.id
             LEFT JOIN categories c ON p.category_id = c.id
@@ -55,15 +58,15 @@ try {
         
         $params = [];
         if (!empty($_POST['date_from'])) {
-            $query .= " AND sc.changed_at >= ?";
+            $query .= " AND sc.created_at >= ?";
             $params[] = $_POST['date_from'];
         }
         if (!empty($_POST['date_to'])) {
-            $query .= " AND sc.changed_at <= ?";
+            $query .= " AND sc.created_at <= ?";
             $params[] = $_POST['date_to'] . ' 23:59:59';
         }
         
-        $query .= " ORDER BY sc.changed_at DESC";
+        $query .= " ORDER BY sc.created_at DESC";
         
         $stmt = $pdo->prepare($query);
         $stmt->execute($params);
@@ -84,13 +87,13 @@ try {
             $product['shelf_location'],
             $product['quantity'],
             $_POST['report_type'] === 'changes' ? 
-                "Izmaiņa: {$product['old_location']} -> {$product['new_location']} ({$product['changed_at']})" : 
+                "Izmaiņa: {$product['old_location']} -> {$product['new_location']} ({$product['created_at']})" : 
                 null
         ]);
     }
 
     $pdo->commit();
-    echo json_encode(['success' => true]);
+    echo json_encode(['success' => true, 'report_id' => $reportId]);
 
 } catch (Exception $e) {
     $pdo->rollBack();

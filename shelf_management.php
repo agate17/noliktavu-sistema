@@ -79,34 +79,6 @@ try {
                     <div class="alert alert-danger"><?= $error ?></div>
                 <?php endif; ?>
 
-                <!-- Report Generation Form -->
-                <div class="report-section">
-                    <h2>Ģenerēt atskaiti</h2>
-                    <form id="report-form" class="report-form">
-                        <div class="form-group">
-                            <label for="report_name">Atskaites nosaukums:</label>
-                            <input type="text" id="report_name" name="report_name" required 
-                                   placeholder="Ievadiet atskaites nosaukumu">
-                        </div>
-                        <div class="form-group">
-                            <label for="report_type">Atskaites veids:</label>
-                            <select id="report_type" name="report_type" required>
-                                <option value="current">Pašreizējais plauktu stāvoklis</option>
-                                <option value="changes">Plauktu izmaiņu vēsture</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label for="date_from">No datuma:</label>
-                            <input type="date" id="date_from" name="date_from">
-                        </div>
-                        <div class="form-group">
-                            <label for="date_to">Līdz datumam:</label>
-                            <input type="date" id="date_to" name="date_to">
-                        </div>
-                        <button type="submit" class="btn">Ģenerēt atskaiti</button>
-                    </form>
-                </div>
-
                 <!-- Shelf Statistics -->
                 <div class="shelf-stats">
                     <h2>Plauktu statistika</h2>
@@ -286,29 +258,6 @@ try {
                         alert('Kļūda saglabājot izmaiņas');
                     }
                 });
-            });
-        });
-
-        // Handle report form submission
-        $('#report-form').submit(function(e) {
-            e.preventDefault();
-            const formData = $(this).serialize();
-            
-            $.ajax({
-                url: 'generate_shelf_report.php',
-                method: 'POST',
-                data: formData,
-                success: function(response) {
-                    if (response.success) {
-                        alert('Atskaite veiksmīgi ģenerēta!');
-                        window.location.href = 'shelf_reports.php';
-                    } else {
-                        alert('Kļūda: ' + response.error);
-                    }
-                },
-                error: function() {
-                    alert('Kļūda ģenerējot atskaiti');
-                }
             });
         });
 

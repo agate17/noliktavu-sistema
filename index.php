@@ -22,34 +22,62 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $error = "Parolei jābūt vismaz 6 simbolus garai";
     } else {
         if ($action === 'register') {
-            // Check if username exists
-            $stmt = $pdo->prepare("SELECT * FROM users WHERE username = ?");
-            $stmt->execute([$username]);
-            $existingUser = $stmt->fetch();
-
-            if ($existingUser) {
-                $error = "Lietotājvārds jau eksistē!";
+            $confirm_password = $_POST['confirm_password'];
+            
+            if ($password !== $confirm_password) {
+                $error = "Paroles nesakrīt!";
             } else {
-                $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
-                $role = 'worker'; // default role
-                $stmt = $pdo->prepare("INSERT INTO users (username, password, role) VALUES (?, ?, ?)");
-                $stmt->execute([$username, $hashedPassword, $role]);
-
-                $success = "Konts izveidots! Tagad vari pieteikties.";
+                try {
+                    // Check if username exists
+                    $stmt = $pdo->prepare("SELECT id FROM users WHERE username = ?");
+                    $stmt->execute([$username]);
+                    if ($stmt->rowCount() > 0) {
+                        $error = "Lietotājvārds jau eksistē!";
+                    } else {
+                        // Get worker role ID
+                        $stmt = $pdo->prepare("SELECT id FROM roles WHERE role_name = 'worker'");
+                        $stmt->execute();
+                        $role = $stmt->fetch();
+                        
+                        if (!$role) {
+                            throw new Exception("Worker role not found in database");
+                        }
+                        
+                        // Insert new user with worker role
+                        $stmt = $pdo->prepare("INSERT INTO users (username, password, role_id) VALUES (?, ?, ?)");
+                        $stmt->execute([$username, password_hash($password, PASSWORD_DEFAULT), $role['id']]);
+                        
+                        $_SESSION['success'] = "Reģistrācija veiksmīga! Lūdzu, pieteikties.";
+                        header("Location: index.php");
+                        exit;
+                    }
+                } catch (Exception $e) {
+                    $error = "Kļūda reģistrācijas laikā: " . $e->getMessage();
+                }
             }
         } elseif ($action === 'login') {
-            $stmt = $pdo->prepare("SELECT * FROM users WHERE username = ?");
-            $stmt->execute([$username]);
-            $user = $stmt->fetch();
-
-            if ($user && password_verify($password, $user['password'])) {
-                $_SESSION['user_id'] = $user['id'];
-                $_SESSION['username'] = $user['username'];
-                $_SESSION['role'] = $user['role'];
-                header('Location: dashboard.php');
-                exit;
-            } else {
-                $error = "Nepareizs lietotājvārds vai parole";
+            try {
+                $stmt = $pdo->prepare("
+                    SELECT u.*, r.role_name 
+                    FROM users u 
+                    JOIN roles r ON u.role_id = r.id 
+                    WHERE u.username = ?
+                ");
+                $stmt->execute([$username]);
+                $user = $stmt->fetch();
+                
+                if ($user && password_verify($password, $user['password'])) {
+                    $_SESSION['user_id'] = $user['id'];
+                    $_SESSION['username'] = $user['username'];
+                    $_SESSION['role'] = $user['role_name'];
+                    
+                    header("Location: index.php");
+                    exit;
+                } else {
+                    $error = "Nepareizs lietotājvārds vai parole!";
+                }
+            } catch (PDOException $e) {
+                $error = "Kļūda pieteikšanās laikā: " . $e->getMessage();
             }
         }
     }
@@ -123,6 +151,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <div class="form-group">
                 <label for="password">Izvēlies paroli:</label>
                 <input type="password" name="password" required>
+            </div>
+            <div class="form-group">
+                <label for="confirm_password">Atkārtojiet paroli:</label>
+                <input type="password" name="confirm_password" required>
             </div>
             <button type="submit" class="btn btn-secondary">Reģistrēties</button>
         </form>
