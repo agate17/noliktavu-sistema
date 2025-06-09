@@ -1,10 +1,23 @@
 <?php
-include 'config.php';
+require_once 'config.php';
+require_once 'auth.php';
 
-// Check if user is logged in and has appropriate permissions
-if (!isset($_SESSION['user_id']) || !in_array($_SESSION['role'], ['administrator', 'shelf_organizer'])) {
-    header('Location: dashboard.php');
-    exit;
+// Check if user is logged in
+if (!isLoggedIn()) {
+    header('Location: login.php');
+    exit();
+}
+
+try {
+    // Get all reports
+    $query = "SELECT r.*, u.username as created_by_username 
+              FROM shelf_reports r 
+              LEFT JOIN users u ON r.created_by = u.id 
+              ORDER BY r.created_at DESC";
+    $stmt = $pdo->query($query);
+    $reports = $stmt->fetchAll(PDO::FETCH_ASSOC);
+} catch (PDOException $e) {
+    $error = "Kļūda ielādējot atskaites: " . $e->getMessage();
 }
 ?>
 
@@ -13,103 +26,99 @@ if (!isset($_SESSION['user_id']) || !in_array($_SESSION['role'], ['administrator
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>STASH - Plauktu atskaites</title>
-    <link rel="stylesheet" href="style.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <title>Plauktu atskaites - STASH</title>
+    <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
     <div class="container">
-        <aside class="sidebar">
-            <div class="logo">
-                <h2>📦 STASH</h2>
-            </div>
-            
-            <nav class="nav-menu">
-                <a href="dashboard.php" class="nav-item">🏠 Sākums</a>
-                <a href="shelf_management.php" class="nav-item">📋 Plauktu pārvaldība</a>
-                <a href="shelf_reports.php" class="nav-item active">📊 Plauktu atskaites</a>
-                <a href="logout.php" class="nav-item">🚪 Iziet</a>
-            </nav>
-        </aside>
+        <?php include 'includes/nav.php'; ?>
         
         <main class="main-content">
             <div class="header">
                 <h1>Plauktu atskaites</h1>
                 <div class="user-info">
-                    Lietotājs: <strong><?php echo htmlspecialchars($_SESSION['username']); ?></strong> 
-                    (<?php echo htmlspecialchars($_SESSION['role']); ?>)
+                    Lietotājs: <strong><?= htmlspecialchars(getCurrentUsername()) ?></strong>
+                    (<?= htmlspecialchars(getCurrentUserRole()) ?>)
                 </div>
             </div>
             
             <div class="content">
-                <div class="dashboard-grid">
-                    <!-- Report Generation Section -->
-                    <div class="dashboard-card">
-                        <h3>Izveidot atskaiti</h3>
-                        <div class="card-content">
-                            <form method="POST" class="form" onsubmit="return false;">
-                                <div class="form-group">
-                                    <label for="report_type">Atskaites tips:</label>
-                                    <select id="report_type" name="report_type" required>
-                                        <option value="">Izvēlieties atskaites tipu</option>
-                                        <option value="shelf_content">Plaukta saturs</option>
-                                        <option value="empty_shelves">Tukšie plaukti</option>
-                                        <option value="full_shelves">Pilnie plaukti</option>
-                                        <option value="product_locations">Produktu izvietojumi</option>
-                                    </select>
-                                </div>
-                                
-                                <div class="form-group">
-                                    <label for="date_range">Datuma diapazons:</label>
-                                    <div class="date-range">
-                                        <input type="date" id="date_from" name="date_from" required>
-                                        <span>līdz</span>
-                                        <input type="date" id="date_to" name="date_to" required>
-                                    </div>
-                                </div>
-                                
-                                <div class="form-group">
-                                    <label for="shelf_section">Plaukta sekcija (neobligāts):</label>
-                                    <input type="text" id="shelf_section" name="shelf_section" 
-                                           placeholder="Piemēram: A vai B">
-                                </div>
-                                
-                                <button type="submit" class="btn btn-primary" disabled>Ģenerēt atskaiti</button>
-                            </form>
-                        </div>
-                    </div>
+                <?php if (isset($error)): ?>
+                    <div class="alert alert-danger"><?= $error ?></div>
+                <?php endif; ?>
 
-                    <!-- Recent Reports Section -->
-                    <div class="dashboard-card">
-                        <h3>Pēdējās atskaites</h3>
-                        <div class="card-content">
-                            <div class="recent-reports">
-                                <p class="text-muted">Nav ģenerētu atskaišu</p>
-                            </div>
-                        </div>
+                <?php if (empty($reports)): ?>
+                    <p class="no-data">Nav atrasta neviena atskaite.</p>
+                <?php else: ?>
+                    <div class="table-container">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Atskaites nosaukums</th>
+                                    <th>Veids</th>
+                                    <th>Datums</th>
+                                    <th>Izveidoja</th>
+                                    <th>Darbības</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php foreach ($reports as $report): ?>
+                                    <tr>
+                                        <td><?= htmlspecialchars($report['name']) ?></td>
+                                        <td>
+                                            <?= $report['type'] === 'current' ? 
+                                                'Pašreizējais stāvoklis' : 
+                                                'Izmaiņu vēsture' ?>
+                                        </td>
+                                        <td>
+                                            <?= date('d.m.Y H:i', strtotime($report['created_at'])) ?>
+                                            <?php if ($report['date_from'] || $report['date_to']): ?>
+                                                <br>
+                                                <small>
+                                                    <?php if ($report['date_from']): ?>
+                                                        No: <?= date('d.m.Y', strtotime($report['date_from'])) ?>
+                                                    <?php endif; ?>
+                                                    <?php if ($report['date_to']): ?>
+                                                        Līdz: <?= date('d.m.Y', strtotime($report['date_to'])) ?>
+                                                    <?php endif; ?>
+                                                </small>
+                                            <?php endif; ?>
+                                        </td>
+                                        <td><?= htmlspecialchars($report['created_by_username']) ?></td>
+                                        <td>
+                                            <a href="view_shelf_report.php?id=<?= $report['id'] ?>" 
+                                               class="btn btn-sm">Skatīt</a>
+                                            <?php if (isAdmin()): ?>
+                                                <button class="btn btn-sm btn-danger delete-report" 
+                                                        data-id="<?= $report['id'] ?>">Dzēst</button>
+                                            <?php endif; ?>
+                                        </td>
+                                    </tr>
+                                <?php endforeach; ?>
+                            </tbody>
+                        </table>
                     </div>
-
-                    <!-- Report Templates Section -->
-                    <div class="dashboard-card">
-                        <h3>Atskaišu veidnes</h3>
-                        <div class="card-content">
-                            <div class="report-templates">
-                                <div class="template-item">
-                                    <h4>Ikdienas plaukta pārskats</h4>
-                                    <p>Kopējs pārskats par visiem plauktiem</p>
-                                    <button class="btn btn-secondary" disabled>Izmantot veidni</button>
-                                </div>
-                                <div class="template-item">
-                                    <h4>Nedēļas inventāra atskaite</h4>
-                                    <p>Detalizēta atskaite par plauktu saturu</p>
-                                    <button class="btn btn-secondary" disabled>Izmantot veidni</button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+                <?php endif; ?>
             </div>
         </main>
     </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+    $(document).ready(function() {
+        $('.delete-report').click(function() {
+            if (confirm('Vai tiešām vēlaties dzēst šo atskaiti?')) {
+                const reportId = $(this).data('id');
+                $.post('delete_shelf_report.php', { id: reportId }, function(response) {
+                    if (response.success) {
+                        location.reload();
+                    } else {
+                        alert('Kļūda dzēšot atskaiti: ' + response.error);
+                    }
+                });
+            }
+        });
+    });
+    </script>
 </body>
 </html> 
