@@ -1,6 +1,4 @@
 -- database setup
--- Warehouse Management System Database Setup
--- Save this as: database/setup.sql
 
 CREATE DATABASE IF NOT EXISTS warehouse_system;
 USE warehouse_system;
