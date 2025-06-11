@@ -10,16 +10,16 @@ if (!isset($_SESSION['user_id'])) {
 $role = $_SESSION['role'];
 $username = $_SESSION['username'];
 
-// Check table structure to determine which query to use
+
 try {
     $stmt = $pdo->query("SHOW COLUMNS FROM products LIKE 'category'");
     $hasDirectCategory = $stmt->rowCount() > 0;
     
     if ($hasDirectCategory) {
-        // If products table has direct 'category' field
+        
         $stmt = $pdo->query("SELECT * FROM products ORDER BY id DESC");
     } else {
-        // If products table uses category_id with categories table
+        
         $stmt = $pdo->query("
             SELECT p.*, c.name as category_name 
             FROM products p 
@@ -29,7 +29,7 @@ try {
     }
     $products = $stmt->fetchAll();
 } catch (PDOException $e) {
-    // Fallback to simple query if there's an error
+    
     $stmt = $pdo->query("SELECT * FROM products ORDER BY id DESC");
     $products = $stmt->fetchAll();
 }
@@ -66,14 +66,14 @@ try {
                         👥 Lietotāji
                     </a>
                     <a href="reports.php" class="nav-item">
-                        📊 Izveidot atskaiti
+                        📊 Noliktavas atskaite
                     </a>
                 <?php elseif ($role == 'warehouse_worker'): ?>
                     <a href="orders.php" class="nav-item">
                         🚚 Veikt pasūtījumu
                     </a>
                     <a href="reports.php" class="nav-item">
-                        📊 Izveidot atskaiti
+                        📊 Noliktavas atskaite
                     </a>
                 <?php elseif (in_array($role, ['shelf_organizer', 'plauktu_kartotajs'])): ?>
                     <a href="shelf_management.php" class="nav-item">
