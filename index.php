@@ -10,6 +10,12 @@ if (isset($_SESSION['user_id'])) {
 $error = '';
 $success = '';
 
+// Check for success message from session
+if (isset($_SESSION['success'])) {
+    $success = $_SESSION['success'];
+    unset($_SESSION['success']);
+}
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $action = $_POST['action'] ?? null;
     $username = trim($_POST['username'] ?? '');
@@ -34,16 +40,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     if ($stmt->rowCount() > 0) {
                         $error = "Lietotājvārds jau eksistē!";
                     } else {
-                        // Get worker role ID
-                        $stmt = $pdo->prepare("SELECT id FROM roles WHERE role_name = 'worker'");
+                        // Get warehouse_worker role ID (default role for new registrations)
+                        $stmt = $pdo->prepare("SELECT id FROM roles WHERE role_name = 'warehouse_worker'");
                         $stmt->execute();
                         $role = $stmt->fetch();
                         
                         if (!$role) {
-                            throw new Exception("Worker role not found in database");
+                            // If warehouse_worker doesn't exist, try to get any available role
+                            $stmt = $pdo->prepare("SELECT id FROM roles ORDER BY id LIMIT 1");
+                            $stmt->execute();
+                            $role = $stmt->fetch();
+                            
+                            if (!$role) {
+                                throw new Exception("No roles found in database. Please contact administrator.");
+                            }
                         }
                         
-                        // Insert new user with worker role
+                        // Insert new user with warehouse_worker role (or first available role)
                         $stmt = $pdo->prepare("INSERT INTO users (username, password, role_id) VALUES (?, ?, ?)");
                         $stmt->execute([$username, password_hash($password, PASSWORD_DEFAULT), $role['id']]);
                         
@@ -71,7 +84,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $_SESSION['username'] = $user['username'];
                     $_SESSION['role'] = $user['role_name'];
                     
-                    header("Location: index.php");
+                    header("Location: dashboard.php");
                     exit;
                 } else {
                     $error = "Nepareizs lietotājvārds vai parole!";
@@ -173,12 +186,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         function toggleForms() {
             const loginForm = document.getElementById('loginForm');
             const registerForm = document.getElementById('registerForm');
-            loginForm.style.display = loginForm.style.display === 'none' ? 'block' : 'none';
-            registerForm.style.display = registerForm.style.display === 'none' ? 'block' : 'none';
-
-            const toggle = document.querySelector('.toggle-link');
-            toggle.textContent = toggle.textContent.includes('Reģistrējies') ?
-                'Tev jau ir konts? Pieslēdzies' : 'Vai tev nav konta? Reģistrējies šeit';
+            const toggleLink = document.querySelector('.toggle-link');
+            
+            if (loginForm.style.display === 'none') {
+                loginForm.style.display = 'block';
+                registerForm.style.display = 'none';
+                toggleLink.textContent = 'Vai tev nav konta? Reģistrējies šeit';
+            } else {
+                loginForm.style.display = 'none';
+                registerForm.style.display = 'block';
+                toggleLink.textContent = 'Tev jau ir konts? Pieslēdzies';
+            }
         }
     </script>
 </body>
