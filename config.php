@@ -1,5 +1,5 @@
 <?php
-// config.php - Database configuration
+
 $host = 'localhost';
 $dbname = 'stash_warehouse';
 $username = 'root';
@@ -12,5 +12,27 @@ try {
     die("Connection failed: " . $e->getMessage());
 }
 
-session_start();
+
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
+
+function isLoggedIn() {
+    return isset($_SESSION['user_id']);
+}
+
+function getUserRole() {
+    return $_SESSION['role'] ?? null;
+}
+
+function hasPermission($required_permission) {
+    if (!isLoggedIn()) return false;
+
+    $role = getUserRole();
+    if (strtolower($role) === 'administrator') return true;
+
+    $permissions = $_SESSION['permissions'] ?? '';
+    return strpos($permissions, $required_permission) !== false;
+}
 ?>
