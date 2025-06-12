@@ -1,11 +1,5 @@
 <?php
-/**
- * Check if user is logged in
- * @return bool
- */
-function isLoggedIn() {
-    return isset($_SESSION['user_id']);
-}
+require_once 'config.php';
 
 /**
  * Check if user has any of the specified roles
